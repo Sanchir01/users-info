@@ -1,0 +1,14 @@
+env: "development"
+
+database:
+  host: localhost
+  port: "5439"
+  user: "postgres"
+  dbname: "test"
+  max_attempts: 10
+
+redis:
+  host: "localhost"
+  port: "6380"
+  password: ""
+  dbnumber: 0

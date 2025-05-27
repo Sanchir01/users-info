@@ -1,0 +1,23 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server celler",
+        "title": "🚀 Avito testovoe",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "GitHub",
+            "url": "https://github.com/Sanchir01"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {},
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
