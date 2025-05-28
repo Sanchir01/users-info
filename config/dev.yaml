@@ -7,6 +7,13 @@ database:
   dbname: "test"
   max_attempts: 10
 
+servers:
+  http:
+    port: "8080"
+    host: "0.0.0.0"
+    timeout: 5s
+    idle_timeout: 60s
+
 redis:
   host: "localhost"
   port: "6380"

@@ -45,6 +45,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err := h.service.CreateUserService(req.Name, req.Surname, req.Patronymic, r.Context()); err != nil {
 		log.Error("fail create user", sl.Err(err))
 		render.JSON(w, r, api.Error("invalid request"))
+
 		return
 	}
 	log.Info("success create user")

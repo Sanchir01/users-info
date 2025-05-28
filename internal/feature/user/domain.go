@@ -14,6 +14,7 @@ type CreateUserResponse struct {
 	api.Response
 	Ok string `json:"ok" validate:"required"`
 }
+
 type NationalizeResponse struct {
 	Name    string              `json:"name"`
 	Country []CountryPrediction `json:"country"`

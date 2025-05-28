@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 
 	genderctx "github.com/Sanchir01/users-info/internal/gender"
 	"github.com/jackc/pgx/v5"
@@ -44,6 +45,14 @@ func (s *Service) CreateUserService(
 	if err != nil {
 		return err
 	}
+	type result struct {
+		value interface{}
+		err   error
+	}
+
+	genderCh := make(chan result, 1)
+	ageCh := make(chan result, 1)
+	nationalityCh := make(chan result, 1)
 	defer func() {
 		if err != nil {
 			rollbackErr := tx.Rollback(ctx)
@@ -53,22 +62,49 @@ func (s *Service) CreateUserService(
 			}
 		}
 	}()
-	genderuser, err := s.GetGenderUser(ctx, name)
-	if err != nil {
-		slog.Error("ошибка получения пола пользователя:", err.Error())
-		return err
+
+	go func() {
+		gender, err := s.GetGenderUser(ctx, name)
+		genderCh <- result{value: gender, err: err}
+	}()
+	go func() {
+		age, err := s.GetAgeUser(ctx, name)
+		ageCh <- result{value: age, err: err}
+	}()
+	go func() {
+		nationality, err := s.GetNationalityUser(ctx, name)
+		nationalityCh <- result{value: nationality, err: err}
+	}()
+
+	genderRes := <-genderCh
+	ageRes := <-ageCh
+	nationalityRes := <-nationalityCh
+
+	if genderRes.err != nil {
+		slog.Error("ошибка получения пола пользователя:", genderRes.err.Error())
+		return genderRes.err
 	}
-	ageuser, err := s.GetAgeUser(ctx, name)
-	if err != nil {
-		slog.Error("ошибка получения пола пользователя:", err.Error())
-		return err
+	if ageRes.err != nil {
+		slog.Error("ошибка получения возраста пользователя:", ageRes.err.Error())
+		return ageRes.err
 	}
-	nationalityuser, err := s.GetNationalityUser(ctx, name)
-	if err != nil {
-		slog.Error("ошибка получения пола пользователя:", err.Error())
-		return err
+	if nationalityRes.err != nil {
+		slog.Error("ошибка получения национальности пользователя:", nationalityRes.err.Error())
+		return nationalityRes.err
 	}
-	slog.Info("пол пользователя", genderuser, "user age", ageuser, "user nationality", nationalityuser)
+
+	genderuser, ok := genderRes.value.(genderctx.Gender)
+	if !ok {
+		return fmt.Errorf("не удалось привести genderuser к string")
+	}
+	ageuser, ok := ageRes.value.(int)
+	if !ok {
+		return fmt.Errorf("не удалось привести ageuser к int")
+	}
+	nationalityuser, ok := nationalityRes.value.(string)
+	if !ok {
+		return fmt.Errorf("не удалось привести nationalityuser к string")
+	}
 	if err := s.repo.CreateUserRepository(name, surname, patronymic, nationalityuser, ageuser, genderuser, tx, ctx); err != nil {
 		return err
 	}
@@ -80,7 +116,6 @@ func (s *Service) CreateUserService(
 }
 func (s *Service) GetGenderUser(ctx context.Context, name string) (genderctx.Gender, error) {
 	urlgender := fmt.Sprintf(genderUrl, name)
-	slog.Warn("gender url", urlgender)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlgender, nil)
 	if err != nil {
 		return genderctx.Unknown, err
@@ -104,7 +139,6 @@ func (s *Service) GetGenderUser(ctx context.Context, name string) (genderctx.Gen
 		slog.Error("ошибка валидации данных:", err.Error())
 		return genderctx.Unknown, fmt.Errorf("validation error: %w", err)
 	}
-	fmt.Println("data gender", data)
 	switch data.Gender {
 	case genderctx.GenderMale:
 		return genderctx.GenderMale, nil
@@ -118,7 +152,6 @@ func (s *Service) GetGenderUser(ctx context.Context, name string) (genderctx.Gen
 
 func (s *Service) GetAgeUser(ctx context.Context, name string) (int, error) {
 	urlgender := fmt.Sprintf(ageUrl, name)
-	slog.Warn("gender url", urlgender)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlgender, nil)
 	if err != nil {
 		return 0, err
@@ -138,19 +171,16 @@ func (s *Service) GetAgeUser(ctx context.Context, name string) (int, error) {
 		slog.Error("ошибка парсинга:", err.Error())
 		return 0, err
 	}
-	slog.Info("user age", data)
 	if err := validator.New().Struct(&data); err != nil {
 		slog.Error("ошибка валидации данных:", err.Error())
 		return 0, fmt.Errorf("validation error: %w", err)
 	}
-	fmt.Println("data gender", data)
 	return data.Age, nil
 
 }
 
 func (s *Service) GetNationalityUser(ctx context.Context, name string) (string, error) {
 	urlgender := fmt.Sprintf(nationalityUrl, name)
-	slog.Warn("gender url", urlgender)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlgender, nil)
 	if err != nil {
 		return "", err
@@ -170,12 +200,10 @@ func (s *Service) GetNationalityUser(ctx context.Context, name string) (string, 
 		slog.Error("ошибка парсинга:", err.Error())
 		return "", err
 	}
-	slog.Info("user nationality", data)
 	if err := validator.New().Struct(&data); err != nil {
 		slog.Error("ошибка валидации данных:", err.Error())
 		return "", fmt.Errorf("validation error: %w", err)
 	}
-	fmt.Println("data gender", data)
 	return data.Country[0].CountryID, nil
 
 }
