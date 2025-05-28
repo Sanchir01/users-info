@@ -1,4 +1,4 @@
-package responseErr
+package api
 
 import (
 	"fmt"

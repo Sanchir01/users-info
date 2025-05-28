@@ -17,7 +17,7 @@ func PGXNew(cfg *config.Config, ctx context.Context) (*pgxpool.Pool, error) {
 	switch cfg.Env {
 	case "development":
 		dsn = fmt.Sprintf(
-			"postgresql://postgres:postgres@localhost:5435/test",
+			"postgresql://postgres:postgres@localhost:5439/test",
 		)
 	case "production":
 		dsn = fmt.Sprintf(

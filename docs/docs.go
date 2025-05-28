@@ -34,7 +34,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "🚀 Avito testovoe",
+	Title:            "🚀 Effective Mobile",
 	Description:      "This is a sample server celler",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// @title 🚀 Avito testovoe
+// @title 🚀 Effective Mobile
 // @version         1.0
 // @description This is a sample server celler
 // @termsOfService  http://swagger.io/terms/

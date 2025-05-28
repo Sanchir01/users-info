@@ -30,8 +30,8 @@ func NewEnv() (*Env, error) {
 	}
 
 	repos := NewRepositories(pgxdb)
-	servises := NewServices(repos)
-	handlers := NewHandlers(servises)
+	servises := NewServices(repos, pgxdb)
+	handlers := NewHandlers(servises, lg)
 
 	env := Env{
 		Logger:       lg,
