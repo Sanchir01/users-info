@@ -1,4 +1,4 @@
-basePath: /
+basePath: /apiv1
 host: localhost:8080
 info:
   contact:
@@ -9,9 +9,4 @@ info:
   title: "\U0001F680 Effective Mobile"
   version: "1.0"
 paths: {}
-securityDefinitions:
-  ApiKeyAuth:
-    in: header
-    name: Authorization
-    type: apiKey
 swagger: "2.0"

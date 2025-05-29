@@ -15,16 +15,12 @@ import (
 )
 
 // @title 🚀 Effective Mobile
-// @version         1.0
+// @version         0.0.1
 // @description This is a sample server celler
 // @termsOfService  http://swagger.io/terms/
 
 // @host localhost:8080
-// @BasePath /
-
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
+// @BasePath /apiv1
 
 // @contact.name GitHub
 // @contact.url https://github.com/Sanchir01

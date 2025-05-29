@@ -14,29 +14,13 @@ import (
 func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID, middleware.Recoverer)
-	//router.Use(PrometheusMiddleware)
+	router.Use(PrometheusMiddleware)
 	router.Route("/apiv1", func(r chi.Router) {
 		r.Route("/users", func(r chi.Router) {
-
-			r.Get("/info", func(w http.ResponseWriter, _ *http.Request) {
-				if _, err := w.Write([]byte("Hello, World!")); err != nil {
-					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-					return
-				}
-			})
-			r.Delete("/{id}", func(w http.ResponseWriter, _ *http.Request) {
-				if _, err := w.Write([]byte("Deleted!")); err != nil {
-					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-					return
-				}
-			})
+			r.Get("/", handlers.UserHandler.GetAllUsers)
+			r.Delete("/{id}", handlers.UserHandler.DeleteUser)
 			r.Post("/create", handlers.UserHandler.CreateUser)
-			r.Patch("/{id}", func(w http.ResponseWriter, _ *http.Request) {
-				if _, err := w.Write([]byte("Updated!")); err != nil {
-					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-					return
-				}
-			})
+			r.Patch("/{id}", handlers.UserHandler.UpdateUser)
 		})
 	})
 	router.Get("/swagger/*", httpSwagger.Handler(
