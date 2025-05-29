@@ -50,17 +50,41 @@ func (r *Repository) CreateUserRepository(
 	return nil
 }
 
-func (r *Repository) GetAllUsers(ctx context.Context) ([]*UserDB, error) {
+func (r *Repository) GetAllUsers(ctx context.Context, pageSize, pageNumber uint, minAge, maxAge *int) ([]*UserDB, error) {
 	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	defer conn.Release()
-	query, args, err := sq.Select("id,name, surname,patronymic,created_at,updated_at,age,gender,nationality,version").
-		From("public.users").
+	var offset uint
+	if pageNumber >= 1 {
+		offset = (pageNumber - 1) * pageSize
+	} else {
+		offset = 0
+	}
+	
+	// Start building the query
+	queryBuilder := sq.Select("id,name, surname,patronymic,created_at,updated_at,age,gender,nationality,version").
+		From("public.users")
+	
+	// Add age filters if provided
+	if minAge != nil {
+		queryBuilder = queryBuilder.Where(sq.GtOrEq{"age": *minAge})
+	}
+	
+	if maxAge != nil {
+		queryBuilder = queryBuilder.Where(sq.LtOrEq{"age": *maxAge})
+	}
+	
+	// Add pagination
+	queryBuilder = queryBuilder.
 		PlaceholderFormat(sq.Dollar).
-		ToSql()
+		Limit(uint64(pageSize)).
+		Offset(uint64(offset))
+	
+	// Generate SQL
+	query, args, err := queryBuilder.ToSql()
 	if err != nil {
 		return nil, api.ErrQueryString
 	}

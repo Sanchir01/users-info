@@ -115,8 +115,8 @@ func (s *Service) CreateUserService(
 	}
 	return nil
 }
-func (s *Service) GetAllUsers(ctx context.Context) ([]*UserDB, error) {
-	users, err := s.repo.GetAllUsers(ctx)
+func (s *Service) GetAllUsers(ctx context.Context, page, pageSize uint, minAge, maxAge *int) ([]*UserDB, error) {
+	users, err := s.repo.GetAllUsers(ctx, pageSize, page, minAge, maxAge)
 	if err != nil {
 		return nil, err
 	}

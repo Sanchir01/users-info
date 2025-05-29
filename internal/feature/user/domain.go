@@ -19,7 +19,14 @@ type CreateUserResponse struct {
 }
 type GetAllUsersResponse struct {
 	api.Response
-	Users []*UserDB
+	Users        []*UserDB `json:"users"`
+	Page         uint      `json:"page"`
+	ItemsPerPage uint      `json:"items_per_page"`
+}
+
+type PaginationParams struct {
+	Page     uint `json:"page" validate:"omitempty,gte=1"`
+	PageSize uint `json:"page_size" validate:"omitempty,gte=1,lte=100"`
 }
 type UpdateUserRequest struct {
 	Name       string `json:"name" validate:"required,min=1,max=100"`

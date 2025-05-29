@@ -1,7 +1,9 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -14,18 +16,36 @@ import (
 	"github.com/google/uuid"
 )
 
+type UserHandlers interface {
+	GetAllUsers(ctx context.Context, page, pageSize uint, minAge, maxAge *int) ([]*UserDB, error)
+	DeleteUserByID(ctx context.Context, id uuid.UUID) error
+	UpdateUser(ctx context.Context, id uuid.UUID, name, surname, patronymic string) error
+	CreateUserService(
+		name, surname, patronymic string,
+		ctx context.Context,
+	) error
+}
 type Handler struct {
-	service *Service
+	service UserHandlers
 	Log     *slog.Logger
 }
 
-func NewHandler(service *Service, lg *slog.Logger) *Handler {
+func NewHandler(service UserHandlers, lg *slog.Logger) *Handler {
 	return &Handler{
 		service: service,
 		Log:     lg,
 	}
 }
 
+// @Tags user
+// @Description create user
+// @Accept json
+// @Produce json
+// @Param input body CreateUserRequest true "create body"
+// @Success 200 {object}  CreateUserResponse
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /users/create [post]
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	const op = "user.Handler.CreateUser"
 	log := h.Log.With(
@@ -57,6 +77,19 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Ok:       "user created successfully",
 	})
 }
+
+// @Tags user
+// @Description get all users
+// @Accept json
+// @Produce json
+// @Param page query int false "page number" default(1) minimum(1)
+// @Param page_size query int false "items per page" default(10) minimum(1) maximum(100)
+// @Param min_age query int false "minimum age filter"
+// @Param max_age query int false "maximum age filter"
+// @Success 200 {object}  GetAllUsersResponse
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /users [get]
 func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	const op = "user.Handler.GetAllUsers"
 	log := h.Log.With(
@@ -64,20 +97,98 @@ func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		slog.String("request_id", middleware.GetReqID(r.Context())),
 	)
 
-	users, err := h.service.GetAllUsers(r.Context())
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("page_size")
+	minAgeStr := r.URL.Query().Get("min_age")
+	maxAgeStr := r.URL.Query().Get("max_age")
+
+	// Default values
+	var page uint = 1
+	var pageSize uint = 10
+	var minAge, maxAge *int
+
+	// Parse page if provided
+	if pageStr != "" {
+		var pageInt int
+		_, err := fmt.Sscanf(pageStr, "%d", &pageInt)
+		if err == nil && pageInt > 0 {
+			page = uint(pageInt)
+		} else {
+			log.Warn("invalid page parameter", slog.String("page", pageStr))
+		}
+	}
+
+	if pageSizeStr != "" {
+		var pageSizeInt int
+		_, err := fmt.Sscanf(pageSizeStr, "%d", &pageSizeInt)
+		if err == nil && pageSizeInt > 0 && pageSizeInt <= 100 {
+			pageSize = uint(pageSizeInt)
+		} else {
+			log.Warn("invalid page_size parameter", slog.String("page_size", pageSizeStr))
+		}
+	}
+	
+	// Parse age filters if provided
+	if minAgeStr != "" {
+		var minAgeInt int
+		_, err := fmt.Sscanf(minAgeStr, "%d", &minAgeInt)
+		if err == nil && minAgeInt >= 0 {
+			minAge = &minAgeInt
+			log.Info("filtering by min age", slog.Int("min_age", minAgeInt))
+		} else {
+			log.Warn("invalid min_age parameter", slog.String("min_age", minAgeStr))
+		}
+	}
+	
+	if maxAgeStr != "" {
+		var maxAgeInt int
+		_, err := fmt.Sscanf(maxAgeStr, "%d", &maxAgeInt)
+		if err == nil && maxAgeInt >= 0 {
+			maxAge = &maxAgeInt
+			log.Info("filtering by max age", slog.Int("max_age", maxAgeInt))
+		} else {
+			log.Warn("invalid max_age parameter", slog.String("max_age", maxAgeStr))
+		}
+	}
+
+	users, err := h.service.GetAllUsers(r.Context(), page, pageSize, minAge, maxAge)
 	if err != nil {
 		log.Error("fail get all users", sl.Err(err))
 		render.JSON(w, r, api.Error("invalid request"))
 		return
 	}
-	log.Info("get all users success")
+	logParams := []any{
+		slog.Uint64("page", uint64(page)),
+		slog.Uint64("page_size", uint64(pageSize)),
+	}
+	
+	if minAge != nil {
+		logParams = append(logParams, slog.Int("min_age", *minAge))
+	}
+	
+	if maxAge != nil {
+		logParams = append(logParams, slog.Int("max_age", *maxAge))
+	}
+	
+	log.Info("get all users success", logParams...)
 
 	render.JSON(w, r, GetAllUsersResponse{
-		Response: api.OK(),
-		Users:    users,
+		Response:     api.OK(),
+		Users:        users,
+		Page:         page,
+		ItemsPerPage: pageSize,
 	})
 }
 
+// @Tags user
+// @Description delete user by id
+// @Param id path string true "user id"
+// @Accept json
+// @Produce json
+// @Success 200 {object}  DeleteUserResponse
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /users/{id} [delete]
 func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	const op = "user.Handler.DeleteUser"
 	log := h.Log.With(
@@ -107,6 +218,16 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Tags user
+// @Description update user by id
+// @Param id path string true "user id"
+// @Accept json
+// @Produce json
+// @Param input body UpdateUserRequest true "update body"
+// @Success 200 {object} UpdateUserResponse
+// @Failure 400,404 {object} api.Response
+// @Failure 500 {object} api.Response
+// @Router /users/{id} [patch]
 func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	const op = "user.Handler.UpdateUser"
 	log := h.Log.With(

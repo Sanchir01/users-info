@@ -1,4 +1,113 @@
 basePath: /apiv1
+definitions:
+  api.Response:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  user.CreateUserRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      patronymic:
+        maxLength: 100
+        type: string
+      surname:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    - surname
+    type: object
+  user.CreateUserResponse:
+    properties:
+      error:
+        type: string
+      ok:
+        type: string
+      status:
+        type: string
+    required:
+    - ok
+    type: object
+  user.DeleteUserResponse:
+    properties:
+      error:
+        type: string
+      ok:
+        type: string
+      status:
+        type: string
+    required:
+    - ok
+    type: object
+  user.GetAllUsersResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/user.UserDB'
+        type: array
+    type: object
+  user.UpdateUserRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      patronymic:
+        maxLength: 100
+        type: string
+      surname:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    - surname
+    type: object
+  user.UpdateUserResponse:
+    properties:
+      error:
+        type: string
+      ok:
+        type: string
+      status:
+        type: string
+    required:
+    - ok
+    type: object
+  user.UserDB:
+    properties:
+      age:
+        type: integer
+      created_at:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      nationality:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+      updated_at:
+        type: string
+      version:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -7,6 +116,134 @@ info:
   description: This is a sample server celler
   termsOfService: http://swagger.io/terms/
   title: "\U0001F680 Effective Mobile"
-  version: "1.0"
-paths: {}
+  version: 0.0.1
+paths:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: get all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.GetAllUsersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      tags:
+      - user
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete user by id
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.DeleteUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      description: update user by id
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: update body
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UpdateUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      tags:
+      - user
+  /users/create:
+    post:
+      consumes:
+      - application/json
+      description: create user
+      parameters:
+      - description: create body
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/user.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.CreateUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      tags:
+      - user
 swagger: "2.0"
