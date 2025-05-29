@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/Sanchir01/users-info/internal/app"
-	httpserver "github.com/Sanchir01/users-info/internal/server/http"
-	httphandlers "github.com/Sanchir01/users-info/internal/server/http/handlers"
-	"github.com/fatih/color"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Sanchir01/users-info/internal/app"
+	httpserver "github.com/Sanchir01/users-info/internal/server/http"
+	httphandlers "github.com/Sanchir01/users-info/internal/server/http/handlers"
+	"github.com/fatih/color"
 )
 
 // @title 🚀 Effective Mobile

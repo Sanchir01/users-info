@@ -15,7 +15,7 @@ type Server struct {
 
 func NewHTTPServer(host, port string, timeout, idletimeout time.Duration) *Server {
 	srv := &http.Server{
-		Addr:           host + ":" + port,
+		Addr:           "0.0.0.0" + ":" + port,
 		MaxHeaderBytes: 1 << 20,
 		ReadTimeout:    timeout,
 		WriteTimeout:   timeout,

@@ -16,7 +16,7 @@ type Database struct {
 }
 
 func NewDataBases(cfg *config.Config) (*Database, error) {
-	pgxdb, err := connect.PGXNew(cfg, context.Background())
+	pgxdb, err := connect.PGXNew(context.Background(), cfg.DB.User, cfg.DB.Host, cfg.DB.Database, cfg.DB.Port, cfg.DB.MaxAttempts)
 	if err != nil {
 		return nil, err
 	}

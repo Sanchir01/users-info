@@ -1,1 +1,28 @@
+env: "production"
 
+database:
+  host: "host.docker.internal"
+  port: "5439"
+  user: "postgres"
+  dbname: "postgres"
+  max_attempts: 5
+
+servers:
+  http:
+    port: "8080"
+    host: "0.0.0.0"
+    timeout: 10s
+    idle_timeout: 120s
+
+redis:
+  host: "host.docker.internal"
+  port: "6380"
+  password: ""
+  dbnumber: 0
+
+prometheus:
+  host: "0.0.0.0"
+  port: 8081
+  timeout: 4s
+  debug: true
+  idle_timeout: 60s

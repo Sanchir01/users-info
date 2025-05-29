@@ -22,7 +22,7 @@ func NewEnv() (*Env, error) {
 	cfg := config.InitConfig()
 	fmt.Println(cfg.RedisDB)
 	lg := setupLogger(cfg.Env)
-
+	fmt.Println("config", cfg)
 	pgxdb, err := NewDataBases(cfg)
 	if err != nil {
 		lg.Error("pgx error connect", err.Error())

@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.52.2 --name=UserHandlers
 type UserHandlers interface {
 	GetAllUsers(ctx context.Context, page, pageSize uint, minAge, maxAge *int) ([]*UserDB, error)
 	DeleteUserByID(ctx context.Context, id uuid.UUID) error
@@ -102,12 +103,10 @@ func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	minAgeStr := r.URL.Query().Get("min_age")
 	maxAgeStr := r.URL.Query().Get("max_age")
 
-	// Default values
 	var page uint = 1
 	var pageSize uint = 10
 	var minAge, maxAge *int
 
-	// Parse page if provided
 	if pageStr != "" {
 		var pageInt int
 		_, err := fmt.Sscanf(pageStr, "%d", &pageInt)
@@ -127,8 +126,7 @@ func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 			log.Warn("invalid page_size parameter", slog.String("page_size", pageSizeStr))
 		}
 	}
-	
-	// Parse age filters if provided
+
 	if minAgeStr != "" {
 		var minAgeInt int
 		_, err := fmt.Sscanf(minAgeStr, "%d", &minAgeInt)
@@ -139,7 +137,7 @@ func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 			log.Warn("invalid min_age parameter", slog.String("min_age", minAgeStr))
 		}
 	}
-	
+
 	if maxAgeStr != "" {
 		var maxAgeInt int
 		_, err := fmt.Sscanf(maxAgeStr, "%d", &maxAgeInt)
@@ -161,15 +159,15 @@ func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		slog.Uint64("page", uint64(page)),
 		slog.Uint64("page_size", uint64(pageSize)),
 	}
-	
+
 	if minAge != nil {
 		logParams = append(logParams, slog.Int("min_age", *minAge))
 	}
-	
+
 	if maxAge != nil {
 		logParams = append(logParams, slog.Int("max_age", *maxAge))
 	}
-	
+
 	log.Info("get all users success", logParams...)
 
 	render.JSON(w, r, GetAllUsersResponse{

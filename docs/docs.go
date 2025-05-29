@@ -31,6 +31,37 @@ const docTemplate = `{
                 "tags": [
                     "user"
                 ],
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "items per page",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "minimum age filter",
+                        "name": "min_age",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "maximum age filter",
+                        "name": "max_age",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -290,6 +321,12 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "type": "string"
+                },
+                "items_per_page": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
                 },
                 "status": {
                     "type": "string"

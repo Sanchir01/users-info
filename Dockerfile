@@ -6,8 +6,6 @@ RUN apk --no-cache add bash git make gcc gettext musl-dev
 
 RUN go version
 
-RUN go install github.com/air-verse/air@latest
-
 COPY . .
 
 RUN go mod download

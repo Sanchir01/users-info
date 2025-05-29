@@ -6,30 +6,21 @@ import (
 	"os"
 	"time"
 
-	"github.com/Sanchir01/candles_backend/pkg/lib/utils"
-	"github.com/Sanchir01/users-info/internal/config"
+	"github.com/Sanchir01/users-info/pkg/lib/utils"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func PGXNew(cfg *config.Config, ctx context.Context) (*pgxpool.Pool, error) {
-	var dsn string
+func PGXNew(ctx context.Context, user, host, db, port string, maxAttempts int) (*pgxpool.Pool, error) {
+	//todo:: delete ssl disable for production
+	dsn := fmt.Sprintf(
+		"postgresql://%s:%s@%s:%s/%s",
+		user, os.Getenv("DB_PASSWORD"),
+		host, port, db,
+	)
 
-	switch cfg.Env {
-	case "development":
-		dsn = fmt.Sprintf(
-			"postgresql://postgres:postgres@localhost:5439/test",
-		)
-	case "production":
-		dsn = fmt.Sprintf(
-			"postgresql://%s:%s@%s:%s/%s",
-			cfg.DB.User, os.Getenv("DB_PASSWORD_PROD"),
-			cfg.DB.Host, cfg.DB.Port, cfg.DB.Database,
-		)
-	}
 	var pool *pgxpool.Pool
-	var err error
 
-	err = utils.DoWithTries(func() error {
+	err := utils.DoWithTries(func() error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		var err error
@@ -38,8 +29,7 @@ func PGXNew(cfg *config.Config, ctx context.Context) (*pgxpool.Pool, error) {
 			return err
 		}
 		return nil
-	}, cfg.DB.MaxAttempts, 5*time.Second)
-
+	}, maxAttempts, 5*time.Second)
 	if err != nil {
 		return nil, err
 	}
